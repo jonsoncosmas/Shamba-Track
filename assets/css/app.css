@@ -1,0 +1,161 @@
+/* Shamba Track — Base styles
+   Palette (deliberate, not the default cream+terracotta/dark+neon look):
+   - Deep leaf green   #2F5233   (primary — growth, shamba)
+   - Warm husk sand    #F7F3EC  (background — dried maize husk, not stock cream)
+   - Egg-yolk gold     #E8A33D  (accent — the product itself, eggs)
+   - Soil charcoal     #2B2B28  (text — dark earth, not pure black)
+   - Clay red          #B5482E  (alerts/anomaly flags)
+*/
+
+:root {
+    --color-primary: #2F5233;
+    --color-primary-light: #3F6B45;
+    --color-bg: #F7F3EC;
+    --color-surface: #FFFFFF;
+    --color-accent: #E8A33D;
+    --color-text: #2B2B28;
+    --color-text-muted: #6B6B63;
+    --color-alert: #B5482E;
+    --color-border: #E3DDCF;
+
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    --radius: 14px;
+    --tap-min: 48px; /* minimum comfortable tap target */
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-body);
+    background: var(--color-bg);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+}
+
+button {
+    font-family: inherit;
+    min-height: var(--tap-min);
+    min-width: var(--tap-min);
+    font-size: 1rem;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+/* --- App shell --- */
+.app-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-header {
+    background: var(--color-primary);
+    color: #FFFFFF;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.app-header__mark {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.app-main {
+    flex: 1;
+    padding: 1.5rem;
+    max-width: 640px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.status-banner {
+    display: none;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.status-banner--offline {
+    background: #F5E3D8;
+    color: var(--color-alert);
+    border: 1px solid var(--color-alert);
+}
+
+.status-banner.is-visible {
+    display: block;
+}
+
+.welcome-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 2rem 1.5rem;
+    text-align: center;
+}
+
+.welcome-card h1 {
+    font-family: var(--font-display);
+    color: var(--color-primary);
+    margin-top: 0;
+}
+
+.welcome-card p {
+    color: var(--color-text-muted);
+    line-height: 1.6;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: #FFFFFF;
+    padding: 0.9rem 1.75rem;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-light);
+}
+
+/* --- Offline fallback page --- */
+.offline-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+.offline-card {
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    padding: 2.5rem 2rem;
+    text-align: center;
+    max-width: 420px;
+    border: 1px solid var(--color-border);
+}
+
+.offline-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.offline-en {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}

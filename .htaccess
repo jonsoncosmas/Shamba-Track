@@ -1,0 +1,36 @@
+# Shamba Track — Root .htaccess
+# This app deploys directly to a subdomain root (no public/ or public_html/
+# wrapper folder), so we must explicitly block web access to internal
+# folders that would otherwise be reachable by URL.
+
+# Deny direct access to internal/application folders
+RewriteEngine On
+
+RewriteRule ^config/ - [F,L]
+RewriteRule ^src/ - [F,L]
+RewriteRule ^sql/ - [F,L]
+RewriteRule ^includes/ - [F,L]
+
+# Block dotfiles (.git, .env, .gitignore, etc.)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Block direct access to .sql, .md, .example.php files anywhere
+<FilesMatch "\.(sql|md)$">
+    Require all denied
+</FilesMatch>
+
+# Route API requests cleanly: /api/otp/send -> api/index.php
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^api/(.*)$ api/index.php [QSA,L]
+
+# Correct MIME type for the service worker and manifest
+<IfModule mod_headers.c>
+    <FilesMatch "service-worker\.js$">
+        Header set Service-Worker-Allowed "/"
+    </FilesMatch>
+</IfModule>
+
+AddType application/manifest+json .webmanifest

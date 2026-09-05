@@ -1,0 +1,16 @@
+# Secrets — never commit real credentials
+config/config.php
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Dependency directories (if Composer is added later)
+vendor/
+node_modules/
