@@ -1,32 +1,55 @@
-/* Shamba Track — Base styles
-   Palette (deliberate, not the default cream+terracotta/dark+neon look):
-   - Deep leaf green   #2F5233   (primary — growth, shamba)
-   - Warm husk sand    #F7F3EC  (background — dried maize husk, not stock cream)
-   - Egg-yolk gold     #E8A33D  (accent — the product itself, eggs)
-   - Soil charcoal     #2B2B28  (text — dark earth, not pure black)
-   - Clay red          #B5482E  (alerts/anomaly flags)
-*/
+/* Shamba Track — Design system
+   ---------------------------------------------------------------
+   Palette (deliberate — not the cream+terracotta or SaaS-card default):
+   - Deep leaf green  #24402A  (primary — growth, shamba, trust)
+   - Warm husk sand   #F6F1E7  (background — dried maize husk)
+   - Egg-yolk gold    #D98F2B  (accent — the product itself: eggs)
+   - Soil charcoal    #262420  (text — dark earth, not pure black)
+   - Clay red         #B5482E  (errors/anomaly flags)
+   - Leaf success     #3F7D4F  (confirmations, distinct from primary)
+
+   Type:
+   - Display: Fraunces (warm, soft ink-traps — organic, not corporate)
+   - Body: Work Sans (humanist, highly legible at small sizes — chosen
+     over the ubiquitous Inter for a distinct, less generic voice)
+   --------------------------------------------------------------- */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-    --color-primary: #2F5233;
-    --color-primary-light: #3F6B45;
-    --color-bg: #F7F3EC;
+    --color-primary: #24402A;
+    --color-primary-strong: #182C1C;
+    --color-primary-soft: #E8EEE4;
+    --color-bg: #F6F1E7;
     --color-surface: #FFFFFF;
-    --color-accent: #E8A33D;
-    --color-text: #2B2B28;
-    --color-text-muted: #6B6B63;
+    --color-surface-sunken: #EFE7D4;
+    --color-accent: #D98F2B;
+    --color-accent-soft: #FBF0DE;
+    --color-text: #262420;
+    --color-text-muted: #6E6759;
     --color-alert: #B5482E;
-    --color-border: #E3DDCF;
+    --color-alert-soft: #F6E4DE;
+    --color-success: #3F7D4F;
+    --color-border: #E3D8C0;
 
     --font-display: 'Fraunces', Georgia, serif;
-    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-body: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-    --radius: 14px;
-    --tap-min: 48px; /* minimum comfortable tap target */
+    --radius-sm: 10px;
+    --radius: 16px;
+    --radius-lg: 22px;
+    --tap-min: 48px;
+    --shell-width: 480px;
+
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 * {
     box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -35,6 +58,23 @@ body {
     background: var(--color-bg);
     color: var(--color-text);
     -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+}
+
+h1, h2 {
+    font-family: var(--font-display);
+    font-variation-settings: 'SOFT' 40, 'WONK' 1;
+    color: var(--color-primary);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    margin: 0 0 0.5rem;
+}
+
+h1 { font-size: 1.65rem; font-weight: 600; }
+h2 { font-size: 1.35rem; font-weight: 600; }
+
+p {
+    margin: 0 0 0.5rem;
 }
 
 button {
@@ -42,9 +82,21 @@ button {
     min-height: var(--tap-min);
     min-width: var(--tap-min);
     font-size: 1rem;
+    font-weight: 600;
     border-radius: var(--radius);
     border: none;
     cursor: pointer;
+    transition: transform 120ms var(--ease), background-color 120ms var(--ease), opacity 120ms var(--ease);
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+button:disabled {
+    opacity: 0.55;
+    cursor: default;
+    transform: none;
 }
 
 button:focus-visible,
@@ -54,9 +106,17 @@ input:focus-visible {
     outline-offset: 2px;
 }
 
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+    }
+}
+
 /* --- App shell --- */
 .app-shell {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
 }
@@ -64,72 +124,376 @@ input:focus-visible {
 .app-header {
     background: var(--color-primary);
     color: #FFFFFF;
-    padding: 1.25rem 1.5rem;
+    padding: 1.1rem 1.5rem;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.6rem;
 }
 
 .app-header__mark {
     font-family: var(--font-display);
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: 600;
+    letter-spacing: -0.01em;
 }
 
 .app-main {
     flex: 1;
-    padding: 1.5rem;
-    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 1.25rem 3rem;
+    max-width: var(--shell-width);
     margin: 0 auto;
     width: 100%;
 }
 
+/* --- Status banner --- */
 .status-banner {
     display: none;
-    padding: 0.75rem 1rem;
-    border-radius: var(--radius);
-    font-size: 0.9rem;
+    padding: 0.7rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
     margin-bottom: 1rem;
-}
-
-.status-banner--offline {
-    background: #F5E3D8;
+    background: var(--color-alert-soft);
     color: var(--color-alert);
-    border: 1px solid var(--color-alert);
+    border: 1px solid rgba(181, 72, 46, 0.25);
 }
 
 .status-banner.is-visible {
     display: block;
 }
 
-.welcome-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    padding: 2rem 1.5rem;
-    text-align: center;
+/* --- Progress dots (onboarding is a genuine sequence) --- */
+.progress-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0.25rem 0 1.75rem;
 }
 
-.welcome-card h1 {
-    font-family: var(--font-display);
-    color: var(--color-primary);
+.progress-dots.hidden {
+    display: none;
+}
+
+.progress-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-border);
+    transition: background-color 200ms var(--ease), transform 200ms var(--ease);
+}
+
+.progress-dot.is-active {
+    background: var(--color-accent);
+    transform: scale(1.3);
+}
+
+.progress-dot.is-done {
+    background: var(--color-primary);
+}
+
+/* --- Screen transitions --- */
+.screen {
+    animation: screen-in 320ms var(--ease);
+}
+
+.screen.hidden {
+    display: none;
+}
+
+@keyframes screen-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.loading-shell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 0;
+    gap: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.spinner {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* --- Intro / welcome copy --- */
+.intro-block {
+    text-align: center;
+    margin-bottom: 1.75rem;
+}
+
+.intro-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.subtext {
+    font-size: 0.92rem;
+    color: var(--color-text-muted);
+}
+
+/* --- Cards --- */
+.card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem 1.5rem;
+}
+
+/* --- Forms --- */
+.form-label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.88rem;
+    margin: 1.1rem 0 0.4rem;
+    color: var(--color-text);
+}
+
+.form-label:first-of-type {
     margin-top: 0;
 }
 
-.welcome-card p {
+.text-input {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    font-size: 1rem;
+    font-family: inherit;
+    min-height: var(--tap-min);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-sunken);
+    color: var(--color-text);
+    transition: border-color 150ms var(--ease), background-color 150ms var(--ease);
+}
+
+.text-input:focus {
+    border-color: var(--color-primary);
+    background: var(--color-surface);
+    outline: none;
+}
+
+/* Phone input with fixed country-code prefix */
+.phone-field {
+    display: flex;
+    align-items: stretch;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-sunken);
+    overflow: hidden;
+    transition: border-color 150ms var(--ease), background-color 150ms var(--ease);
+}
+
+.phone-field:focus-within {
+    border-color: var(--color-primary);
+    background: var(--color-surface);
+}
+
+.phone-field__prefix {
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    font-weight: 600;
     color: var(--color-text-muted);
-    line-height: 1.6;
+    background: rgba(0, 0, 0, 0.03);
+    border-right: 1.5px solid var(--color-border);
+    min-height: var(--tap-min);
+}
+
+.phone-field input {
+    border: none;
+    background: transparent;
+    padding: 0.85rem 1rem;
+    font-size: 1rem;
+    font-family: inherit;
+    flex: 1;
+    min-width: 0;
+    min-height: var(--tap-min);
+    color: var(--color-text);
+}
+
+.phone-field input:focus {
+    outline: none;
+}
+
+/* OTP digit boxes */
+.otp-group {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    margin: 0.25rem 0;
+}
+
+.otp-digit {
+    width: 46px;
+    height: 56px;
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: inherit;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-sunken);
+    color: var(--color-text);
+    transition: border-color 150ms var(--ease), background-color 150ms var(--ease);
+}
+
+.otp-digit:focus {
+    border-color: var(--color-primary);
+    background: var(--color-surface);
+    outline: none;
+}
+
+.otp-digit.is-filled {
+    border-color: var(--color-primary);
 }
 
 .btn-primary {
     background: var(--color-primary);
     color: #FFFFFF;
     padding: 0.9rem 1.75rem;
-    font-weight: 600;
+    width: 100%;
+    margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
 }
 
-.btn-primary:hover {
-    background: var(--color-primary-light);
+.btn-primary:not(:disabled):hover {
+    background: var(--color-primary-strong);
+}
+
+.btn-primary .spinner {
+    width: 18px;
+    height: 18px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.35);
+    border-top-color: #FFFFFF;
+    display: none;
+}
+
+.btn-primary.is-loading .spinner {
+    display: inline-block;
+}
+
+.btn-primary.is-loading .btn-label {
+    opacity: 0.85;
+}
+
+.btn-link {
+    width: 100%;
+    background: none;
+    color: var(--color-primary);
+    margin-top: 1rem;
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+.btn-link:disabled {
+    color: var(--color-text-muted);
+}
+
+.field-error {
+    color: var(--color-alert);
+    font-size: 0.85rem;
+    min-height: 1.2em;
+    margin: 0.5rem 0 0;
+    font-weight: 500;
+}
+
+.field-hint {
+    color: var(--color-primary);
+    font-size: 0.85rem;
+    margin: 0.5rem 0 0;
+    font-weight: 500;
+}
+
+/* --- Currency picker --- */
+.currency-list {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    margin-top: 0.5rem;
+    background: var(--color-surface);
+}
+
+.currency-list.hidden {
+    display: none;
+}
+
+.currency-option {
+    text-align: left;
+    background: none;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text);
+    border-radius: 0;
+    min-height: var(--tap-min);
+    width: 100%;
+}
+
+.currency-option:hover,
+.currency-option:focus-visible {
+    background: var(--color-accent-soft);
+}
+
+/* --- Dashboard --- */
+.dashboard-greeting {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.dashboard-greeting .subtext {
+    margin-top: 0.25rem;
+}
+
+.roadmap-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.roadmap-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.85rem 1rem;
+    background: var(--color-surface-sunken);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.roadmap-list li::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    flex-shrink: 0;
 }
 
 /* --- Offline fallback page --- */
@@ -139,11 +503,14 @@ input:focus-visible {
     justify-content: center;
     min-height: 100vh;
     padding: 1.5rem;
+    font-family: var(--font-body);
+    background: var(--color-bg);
+    color: var(--color-text);
 }
 
 .offline-card {
     background: var(--color-surface);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     padding: 2.5rem 2rem;
     text-align: center;
     max-width: 420px;

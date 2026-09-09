@@ -4,7 +4,7 @@
  * Phase 3+ will add IndexedDB-backed data caching and background sync.
  */
 
-const CACHE_VERSION = 'shamba-track-shell-v1';
+const CACHE_VERSION = 'shamba-track-shell-v4';
 
 const SHELL_ASSETS = [
     '/',
@@ -13,6 +13,7 @@ const SHELL_ASSETS = [
     '/manifest.webmanifest',
     '/assets/css/app.css',
     '/assets/js/app.js',
+    '/assets/js/auth.js',
     '/assets/icons/icon-192.png',
     '/assets/icons/icon-512.png',
 ];

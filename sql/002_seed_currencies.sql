@@ -1,5 +1,6 @@
 -- Shamba Track — Seed: world currencies (ISO 4217)
 -- Farmer selects one at farm setup; searchable by name/country/code in UI.
+SET NAMES utf8mb4;
 
 INSERT INTO currencies (code, name, symbol, country) VALUES
 ('AED', 'UAE Dirham', 'د.إ', 'United Arab Emirates'),
