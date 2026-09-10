@@ -12,7 +12,7 @@
 
         window.addEventListener('load', () => {
             navigator.serviceWorker
-                .register('/service-worker.js')
+                .register('service-worker.js')
                 .then((reg) => console.log('[ShambaTrack] Service worker registered:', reg.scope))
                 .catch((err) => console.error('[ShambaTrack] Service worker registration failed:', err));
         });

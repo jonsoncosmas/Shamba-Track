@@ -79,7 +79,7 @@
     }
 
     async function api(path, options = {}) {
-        const res = await fetch('/api' + path, {
+        const res = await fetch('api' + path, {
             method: options.method || 'GET',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'same-origin',
