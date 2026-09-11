@@ -1,7 +1,6 @@
 /**
  * Shamba Track — App shell JS
- * Phase 0 scope: register the service worker, reflect online/offline
- * status. IndexedDB storage and the sync queue arrive in Phase 3/8.
+ * Registers the service worker, reflects online/offline status.
  */
 
 (function () {

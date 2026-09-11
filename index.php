@@ -1,5 +1,15 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
+
+/* Compute the URL path this app is actually mounted under, so every link,
+    the manifest, the service worker, and every fetch() call work whether
+    this is served from a domain root (production plan) or a local subfolder
+    (e.g. XAMPP htdocs/shamba-track/) — with zero manual configuration.
+    dirname('/index.php') => '\' on some setups, normalize to '/'; dirname
+    of a subfolder request ('/shamba-track/index.php') => '/shamba-track'. */
+$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+$basePath = rtrim($scriptDir, '/'); // '' at root, '/shamba-track' in a subfolder
+$asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
 ?>
 <!DOCTYPE html>
 <html lang="sw">
@@ -9,11 +19,12 @@ require __DIR__ . '/includes/bootstrap.php';
     <title>Shamba Track</title>
     <meta name="description" content="Track poultry costs, production and profit — works offline.">
     <meta name="theme-color" content="#24402A">
-    <link rel="manifest" href="manifest.webmanifest">
-    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+    <link rel="manifest" href="<?= htmlspecialchars($asset('manifest.webmanifest')) ?>">
+    <link rel="apple-touch-icon" href="<?= htmlspecialchars($asset('assets/icons/icon-192.png')) ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="assets/css/app.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars($asset('assets/css/app.css')) ?>">
+    <script>window.ST_BASE = <?= json_encode($basePath) ?>;</script>
 </head>
 <body>
     <div class="app-shell">
@@ -25,14 +36,12 @@ require __DIR__ . '/includes/bootstrap.php';
         <main class="app-main">
             <div id="status-banner" class="status-banner" role="status"></div>
 
-            <!-- Progress indicator: shown only during the onboarding sequence -->
             <div id="progress-dots" class="progress-dots hidden" aria-hidden="true">
                 <span class="progress-dot" data-step="login"></span>
                 <span class="progress-dot" data-step="otp"></span>
                 <span class="progress-dot" data-step="farm-setup"></span>
             </div>
 
-            <!-- Loading / auto-login check -->
             <section id="screen-loading" class="screen">
                 <div class="loading-shell">
                     <span class="spinner" aria-hidden="true"></span>
@@ -40,7 +49,6 @@ require __DIR__ . '/includes/bootstrap.php';
                 </div>
             </section>
 
-            <!-- Screen 1: phone entry -->
             <section id="screen-login" class="screen hidden">
                 <div class="intro-block">
                     <span class="intro-icon" aria-hidden="true">🐔</span>
@@ -63,7 +71,6 @@ require __DIR__ . '/includes/bootstrap.php';
                 </form>
             </section>
 
-            <!-- Screen 2: OTP verification -->
             <section id="screen-otp" class="screen hidden">
                 <div class="intro-block">
                     <h2>Weka Nambari ya OTP</h2>
@@ -89,7 +96,6 @@ require __DIR__ . '/includes/bootstrap.php';
                 </div>
             </section>
 
-            <!-- Screen 3: farm setup -->
             <section id="screen-farm-setup" class="screen hidden">
                 <div class="intro-block">
                     <h2>Weka Taarifa za Shamba</h2>
@@ -124,26 +130,125 @@ require __DIR__ . '/includes/bootstrap.php';
                 </div>
             </section>
 
-            <!-- Screen 4: dashboard placeholder -->
             <section id="screen-dashboard" class="screen hidden">
                 <div class="dashboard-greeting">
                     <span class="intro-icon" aria-hidden="true">🌾</span>
                     <h1>Karibu, <span id="dashboard-farm-name"></span></h1>
-                    <p class="subtext">Dashibodi kamili inakuja / Full dashboard is on its way</p>
+                </div>
+
+                <div class="card">
+                    <div class="dashboard-section-header">
+                        <h2>Makundi ya Kuku / Batches</h2>
+                        <button type="button" class="btn-small" id="btn-add-batch">+ Ongeza / Add</button>
+                    </div>
+                    <ul class="data-list" id="dashboard-batches-list"></ul>
+                </div>
+
+                <div class="card">
+                    <div class="dashboard-section-header">
+                        <h2>Gharama za Miundombinu / Infrastructure</h2>
+                        <button type="button" class="btn-small" id="btn-add-infrastructure">+ Ongeza / Add</button>
+                    </div>
+                    <ul class="data-list" id="dashboard-infra-list"></ul>
+                </div>
+
+                <button type="button" class="btn-link" id="btn-logout">Toka / Log out</button>
+            </section>
+
+            <!-- Add batch -->
+            <section id="screen-add-batch" class="screen hidden">
+                <div class="intro-block">
+                    <h2>Ongeza Kundi la Kuku</h2>
+                    <p class="subtext">Add a poultry batch</p>
                 </div>
                 <div class="card">
-                    <ul class="roadmap-list">
-                        <li>Kuongeza kundi la kuku / Add a batch</li>
-                        <li>Kurekodi chakula na mayai / Log feed and eggs</li>
-                        <li>Kuona faida yako / See your profit</li>
-                    </ul>
-                    <button type="button" class="btn-link" id="btn-logout">Toka / Log out</button>
+                    <form id="form-add-batch" novalidate>
+                        <label class="form-label">Aina ya Kuku / Breed</label>
+                        <div class="tap-grid" id="breed-picker">
+                            <button type="button" class="breed-option" data-breed="layers">🥚<span>Layers</span></button>
+                            <button type="button" class="breed-option" data-breed="broilers">🍗<span>Broilers</span></button>
+                            <button type="button" class="breed-option" data-breed="kienyeji">🐓<span>Kienyeji Bora</span></button>
+                            <button type="button" class="breed-option" data-breed="sasso">🐔<span>Sasso</span></button>
+                        </div>
+                        <input type="hidden" id="input-batch-breed">
+
+                        <label class="form-label" for="input-batch-quantity">Idadi ya Kuku / Quantity</label>
+                        <input type="number" id="input-batch-quantity" class="text-input" inputmode="numeric" min="1" required>
+
+                        <label class="form-label" for="input-batch-date">Tarehe ya Kupata / Date acquired</label>
+                        <input type="date" id="input-batch-date" class="text-input" required>
+
+                        <label class="form-label" for="input-batch-cost">Gharama kwa Kila Kuku / Cost per bird</label>
+                        <input type="number" id="input-batch-cost" class="text-input" inputmode="decimal" min="0" step="0.01">
+
+                        <label class="form-label" for="input-batch-source">Chanzo / Source (optional)</label>
+                        <input type="text" id="input-batch-source" class="text-input" placeholder="e.g. Hatchery name">
+
+                        <label class="form-label" for="input-batch-notes">Maelezo / Notes (optional)</label>
+                        <input type="text" id="input-batch-notes" class="text-input">
+
+                        <p class="field-error" id="error-add-batch"></p>
+                        <button type="submit" class="btn-primary">
+                            <span class="spinner" aria-hidden="true"></span>
+                            <span class="btn-label">Hifadhi / Save</span>
+                        </button>
+                        <button type="button" class="btn-link" data-back-to-dashboard>Ghairi / Cancel</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Add infrastructure cost -->
+            <section id="screen-add-infrastructure" class="screen hidden">
+                <div class="intro-block">
+                    <h2>Ongeza Gharama</h2>
+                    <p class="subtext">Add an infrastructure or equipment cost</p>
+                </div>
+                <div class="card">
+                    <form id="form-add-infrastructure" novalidate>
+                        <label class="form-label">Aina / Category</label>
+                        <div class="tap-grid" id="category-picker">
+                            <button type="button" class="category-option" data-category="coop">🏚️<span>Banda / Coop</span></button>
+                            <button type="button" class="category-option" data-category="land">🌍<span>Shamba / Land</span></button>
+                            <button type="button" class="category-option" data-category="equipment">🧰<span>Vifaa / Equipment</span></button>
+                        </div>
+                        <input type="hidden" id="input-infra-category">
+
+                        <div id="land-status-field" class="hidden">
+                            <label class="form-label">Umenunua au Kupanga? / Bought or Rented?</label>
+                            <select id="input-infra-land-status" class="text-input">
+                                <option value="">—</option>
+                                <option value="bought">Nimenunua / Bought</option>
+                                <option value="rented">Nimepanga / Rented</option>
+                            </select>
+                        </div>
+
+                        <label class="form-label" for="input-infra-name">Jina la Kipengele / Item name</label>
+                        <input type="text" id="input-infra-name" class="text-input" placeholder="e.g. Feeders x10" required>
+
+                        <label class="form-label" for="input-infra-amount">Kiasi / Amount</label>
+                        <input type="number" id="input-infra-amount" class="text-input" inputmode="decimal" min="0" step="0.01" required>
+
+                        <label class="form-label" for="input-infra-date">Tarehe / Date</label>
+                        <input type="date" id="input-infra-date" class="text-input" required>
+
+                        <label class="form-label" for="input-infra-notes">Maelezo / Notes (optional)</label>
+                        <input type="text" id="input-infra-notes" class="text-input">
+
+                        <p class="field-error" id="error-add-infrastructure"></p>
+                        <button type="submit" class="btn-primary">
+                            <span class="spinner" aria-hidden="true"></span>
+                            <span class="btn-label">Hifadhi / Save</span>
+                        </button>
+                        <button type="button" class="btn-link" data-back-to-dashboard>Ghairi / Cancel</button>
+                    </form>
                 </div>
             </section>
         </main>
     </div>
 
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/auth.js"></script>
+    <script src="<?= htmlspecialchars($asset('assets/js/app.js')) ?>"></script>
+    <script src="<?= htmlspecialchars($asset('assets/js/db.js')) ?>"></script>
+    <script src="<?= htmlspecialchars($asset('assets/js/auth.js')) ?>"></script>
+    <script src="<?= htmlspecialchars($asset('assets/js/batches.js')) ?>"></script>
 </body>
 </html>

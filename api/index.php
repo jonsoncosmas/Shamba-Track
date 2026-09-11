@@ -1,5 +1,4 @@
 <?php
-
 require __DIR__ . '/../includes/bootstrap.php';
 
 use ShambaTrack\Core\Http\Request;
@@ -7,11 +6,12 @@ use ShambaTrack\Core\Http\Response;
 use ShambaTrack\Controllers\AuthController;
 use ShambaTrack\Controllers\FarmController;
 use ShambaTrack\Controllers\CurrencyController;
+use ShambaTrack\Controllers\BatchController;
+use ShambaTrack\Controllers\InfrastructureController;
 
 $route = trim($_GET['route'] ?? '', '/');
 $method = Request::method();
 
-// [METHOD, route] => [Controller, method]
 $routes = [
     'POST /auth/send-otp'   => [AuthController::class, 'sendOtp'],
     'POST /auth/verify-otp' => [AuthController::class, 'verifyOtp'],
@@ -21,6 +21,12 @@ $routes = [
     'POST /farms'           => [FarmController::class, 'create'],
 
     'GET /currencies'       => [CurrencyController::class, 'search'],
+
+    'POST /batches'         => [BatchController::class, 'create'],
+    'GET /batches'          => [BatchController::class, 'list'],
+
+    'POST /infrastructure'  => [InfrastructureController::class, 'create'],
+    'GET /infrastructure'   => [InfrastructureController::class, 'list'],
 ];
 
 $key = $method . ' /' . $route;

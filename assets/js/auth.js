@@ -1,14 +1,12 @@
 /**
  * Shamba Track — Auth & onboarding flow
  * Fully asynchronous: every action is a fetch() call with preventDefault()
- * on its form. No screen change in this file ever triggers a page reload —
- * screens are shown/hidden divs within the single loaded document.
+ * on its form. No screen change in this file ever triggers a page reload.
  *
  * Structural note: DOMContentLoaded registration and a hard failsafe timer
  * are set up FIRST, before any element lookups that could throw. This
  * guarantees the loading screen always resolves to something — even if
- * index.php and this file ever drift out of sync (e.g. a stale cached
- * HTML file served alongside a newer JS file) — instead of leaving the
+ * index.php and this file ever drift out of sync — instead of leaving the
  * user stuck on "Inapakia... / Loading..." forever.
  */
 
@@ -19,6 +17,11 @@
     const ONBOARDING_STEPS = ['login', 'otp', 'farm-setup'];
     let pendingPhone = null;
     let resendTimer = null;
+
+    // Server-computed mount path (see index.php) — '' at a domain root,
+    // '/shamba-track' style prefix under a local subfolder. Falls back to
+    // '' if index.php didn't inject it for some reason, so this never hard-fails.
+    const BASE = (typeof window.ST_BASE === 'string') ? window.ST_BASE : '';
 
     function $(id) { return document.getElementById(id); }
 
@@ -79,7 +82,7 @@
     }
 
     async function api(path, options = {}) {
-        const res = await fetch('api' + path, {
+        const res = await fetch(BASE + '/api' + path, {
             method: options.method || 'GET',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'same-origin',
@@ -102,15 +105,14 @@
         showScreen('screen-dashboard');
     }
 
-    // ---- initial load: instant render from cache, then reconcile with server ----
     async function init() {
         const cached = readCache();
         routeFromState(cached);
 
-        if (!navigator.onLine) return; // trust the cache fully while offline
+        if (!navigator.onLine) return;
 
         const { ok, data } = await api('/auth/me');
-        if (!ok) return; // network hiccup — keep showing cached state
+        if (!ok) return;
 
         const state = {
             authenticated: data.authenticated,
@@ -126,19 +128,11 @@
         try {
             showScreen('screen-login');
         } catch (e) {
-            // If even this fails, the DOM itself doesn't match what this
-            // script expects — nothing more we can safely do client-side.
             console.error('[ShambaTrack] Could not recover to login screen. index.php and auth.js are likely mismatched versions.', e);
         }
     }
 
-    // ---- Bind all form/element event listeners ----
-    // Kept in its own function, called inside a try/catch below, so one
-    // missing/renamed element (version skew between deployed files) logs a
-    // clear diagnostic instead of silently killing the rest of the script
-    // and stranding the loading screen.
     function bindEventListeners() {
-        // ---- Screen 1: send OTP ----
         $('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();
             setError('error-login', '');
@@ -171,7 +165,6 @@
             document.querySelector('.otp-digit[data-otp-index="0"]').focus();
         });
 
-        // ---- Screen 2: OTP digit boxes ----
         const otpDigits = () => Array.from(document.querySelectorAll('.otp-digit'));
 
         function resetOtpBoxes() {
@@ -299,7 +292,6 @@
             document.querySelector('.otp-digit[data-otp-index="0"]').focus();
         });
 
-        // ---- Screen 3: currency search + farm setup ----
         let currencySearchTimer = null;
         $('input-currency-search').addEventListener('input', (e) => {
             const q = e.target.value.trim();
@@ -370,7 +362,6 @@
             routeFromState(state);
         });
 
-        // ---- Logout ----
         $('btn-logout').addEventListener('click', async () => {
             await api('/auth/logout', { method: 'POST' });
             clearCache();
@@ -378,8 +369,6 @@
         });
     }
 
-    // ---- Boot sequence ----
-    // 1. Register DOMContentLoaded + init FIRST, before anything risky.
     document.addEventListener('DOMContentLoaded', function () {
         try {
             init();
@@ -389,9 +378,6 @@
         }
     });
 
-    // 2. Hard failsafe: if the loading screen is still showing after 4s for
-    // ANY reason, force it away. Makes a permanently stuck loading screen
-    // structurally impossible rather than merely "shouldn't happen".
     setTimeout(function () {
         const loadingEl = document.getElementById('screen-loading');
         if (loadingEl && !loadingEl.classList.contains('hidden')) {
@@ -400,9 +386,6 @@
         }
     }, 4000);
 
-    // 3. Bind form/element listeners — wrapped so a missing element
-    // (version skew between deployed files) can't silently break anything
-    // upstream of this point.
     try {
         bindEventListeners();
     } catch (err) {
