@@ -22,11 +22,14 @@ class InfrastructureController
         $amount = (float) Request::input('amount', 0);
         $dateIncurred = (string) Request::input('date_incurred', '');
         $notes = trim((string) Request::input('notes', '')) ?: null;
-        $batchId = Request::input('batch_id', null);
-        $batchId = $batchId !== null && $batchId !== '' ? (int) $batchId : null;
+        $batchClientUuid = Request::input('batch_client_uuid', null);
+        $batchClientUuid = ($batchClientUuid !== null && $batchClientUuid !== '') ? (string) $batchClientUuid : null;
 
         if (!preg_match('/^[0-9a-fA-F-]{36}$/', $clientUuid)) {
             Response::error('Kitambulisho batili. / Invalid record identifier.', 422);
+        }
+        if ($batchClientUuid !== null && !preg_match('/^[0-9a-fA-F-]{36}$/', $batchClientUuid)) {
+            Response::error('Kitambulisho cha kundi si sahihi. / Invalid batch reference.', 422);
         }
         if (!InfrastructureItem::isValidCategory($category)) {
             Response::error('Chagua aina sahihi. / Please select a valid category.', 422);
@@ -46,7 +49,7 @@ class InfrastructureController
 
         $result = InfrastructureItem::createIfNew((int) $farm['id'], [
             'client_uuid'   => $clientUuid,
-            'batch_id'      => $batchId,
+            'batch_client_uuid' => $batchClientUuid,
             'category'      => $category,
             'item_name'     => $itemName,
             'land_status'   => $category === 'land' ? $landStatus : null,

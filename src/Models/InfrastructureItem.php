@@ -37,13 +37,13 @@ class InfrastructureItem
         $pdo = Database::connect();
         $stmt = $pdo->prepare(
             'INSERT INTO infrastructure_items
-                (farm_id, batch_id, client_uuid, category, item_name, land_status, amount, date_incurred, notes)
+                (farm_id, batch_client_uuid, client_uuid, category, item_name, land_status, amount, date_incurred, notes)
              VALUES
-                (:farm_id, :batch_id, :client_uuid, :category, :item_name, :land_status, :amount, :date_incurred, :notes)'
+                (:farm_id, :batch_client_uuid, :client_uuid, :category, :item_name, :land_status, :amount, :date_incurred, :notes)'
         );
         $stmt->execute([
             'farm_id'       => $farmId,
-            'batch_id'      => $data['batch_id'] ?? null,
+            'batch_client_uuid'      => $data['batch_client_uuid'] ?? null,
             'client_uuid'   => $data['client_uuid'],
             'category'      => $data['category'],
             'item_name'     => $data['item_name'],

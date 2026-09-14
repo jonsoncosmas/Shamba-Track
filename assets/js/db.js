@@ -14,8 +14,8 @@ const ShambaDB = (function () {
     'use strict';
 
     const DB_NAME = 'shambatrack';
-    const DB_VERSION = 1;
-    const STORES = ['batches', 'infrastructure'];
+    const DB_VERSION = 2;
+    const STORES = ['batches', 'infrastructure', 'feed_purchases', 'feed_consumption', 'eggs', 'mortality', 'costs'];
 
     let dbPromise = null;
 
@@ -67,5 +67,15 @@ const ShambaDB = (function () {
         return all.filter((r) => r.synced === false);
     }
 
-    return { put, getAll, getUnsynced };
+    function uuid() {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+        // Fallback for older browsers/webviews without crypto.randomUUID
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+            const r = (Math.random() * 16) | 0;
+            const v = c === 'x' ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+        });
+    }
+
+    return { put, getAll, getUnsynced, uuid };
 })();

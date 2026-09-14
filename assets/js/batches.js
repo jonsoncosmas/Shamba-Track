@@ -11,33 +11,7 @@
     'use strict';
 
     function $(id) { return document.getElementById(id); }
-
-    const BASE = (typeof window.ST_BASE === 'string') ? window.ST_BASE : '';
-
-    function uuid() {
-        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
-        // Fallback for older browsers/webviews without crypto.randomUUID
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-            const r = (Math.random() * 16) | 0;
-            const v = c === 'x' ? r : (r & 0x3) | 0x8;
-            return v.toString(16);
-        });
-    }
-
-    async function apiCall(path, options = {}) {
-        try {
-            const res = await fetch(BASE + '/api' + path, {
-                method: options.method || 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-                body: options.body ? JSON.stringify(options.body) : undefined,
-            });
-            const data = await res.json().catch(() => ({}));
-            return { ok: res.ok, data };
-        } catch (e) {
-            return { ok: false, data: {}, networkError: true };
-        }
-    }
+    const uuid = ShambaDB.uuid;
 
     const BREED_LABELS = {
         layers: 'Layers / Mayai',
@@ -52,38 +26,8 @@
         equipment: 'Vifaa / Equipment',
     };
 
-    // ---- Sync: push any unsynced local records to the server ----
-    let syncInFlight = false;
-
-    async function syncPending() {
-        if (syncInFlight || !navigator.onLine) return;
-        syncInFlight = true;
-
-        try {
-            const unsyncedBatches = await ShambaDB.getUnsynced('batches');
-            for (const record of unsyncedBatches) {
-                const { ok } = await apiCall('/batches', { method: 'POST', body: record });
-                if (ok) {
-                    record.synced = true;
-                    await ShambaDB.put('batches', record);
-                }
-            }
-
-            const unsyncedInfra = await ShambaDB.getUnsynced('infrastructure');
-            for (const record of unsyncedInfra) {
-                const { ok } = await apiCall('/infrastructure', { method: 'POST', body: record });
-                if (ok) {
-                    record.synced = true;
-                    await ShambaDB.put('infrastructure', record);
-                }
-            }
-        } finally {
-            syncInFlight = false;
-            renderDashboardLists();
-        }
-    }
-
-    window.addEventListener('online', syncPending);
+    // ---- React to sync completing (triggered from sync.js) ----
+    window.addEventListener('shambatrack:synced', renderDashboardLists);
 
     // ---- Dashboard rendering ----
     async function renderDashboardLists() {
@@ -211,7 +155,7 @@
             renderDashboardLists();
 
             // Then try to sync immediately if online (no-op, safely retried later, if not).
-            syncPending();
+            ShambaSync.syncPending();
         });
     }
 
@@ -250,7 +194,7 @@
             await ShambaDB.put('infrastructure', record);
             showAppScreen('screen-dashboard');
             renderDashboardLists();
-            syncPending();
+            ShambaSync.syncPending();
         });
     }
 
@@ -262,7 +206,7 @@
             bindBatchForm();
             bindInfrastructureForm();
             renderDashboardLists();
-            if (navigator.onLine) syncPending();
+            if (navigator.onLine) ShambaSync.syncPending();
         } catch (err) {
             console.error('[ShambaTrack] batches.js init failed:', err);
         }

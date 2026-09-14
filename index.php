@@ -1,12 +1,12 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
 
-/* Compute the URL path this app is actually mounted under, so every link,
-    the manifest, the service worker, and every fetch() call work whether
-    this is served from a domain root (production plan) or a local subfolder
-    (e.g. XAMPP htdocs/shamba-track/) — with zero manual configuration.
-    dirname('/index.php') => '\' on some setups, normalize to '/'; dirname
-    of a subfolder request ('/shamba-track/index.php') => '/shamba-track'. */
+// Compute the URL path this app is actually mounted under, so every link,
+// the manifest, the service worker, and every fetch() call work whether
+// this is served from a domain root (production plan) or a local subfolder
+// (e.g. XAMPP htdocs/shamba-track/) — with zero manual configuration.
+// dirname('/index.php') => '\' on some setups, normalize to '/'; dirname
+// of a subfolder request ('/shamba-track/index.php') => '/shamba-track'.
 $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
 $basePath = rtrim($scriptDir, '/'); // '' at root, '/shamba-track' in a subfolder
 $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
@@ -136,6 +136,10 @@ $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
                     <h1>Karibu, <span id="dashboard-farm-name"></span></h1>
                 </div>
 
+                <button type="button" class="btn-primary" id="btn-open-daily-log" style="margin-top:0;">
+                    <span class="btn-label">📋 Rekodi ya Leo / Daily Log</span>
+                </button>
+
                 <div class="card">
                     <div class="dashboard-section-header">
                         <h2>Makundi ya Kuku / Batches</h2>
@@ -243,12 +247,208 @@ $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
                     </form>
                 </div>
             </section>
+            <!-- Daily log hub -->
+            <section id="screen-daily-log" class="screen hidden">
+                <div class="intro-block">
+                    <h2>Rekodi ya Leo</h2>
+                    <p class="subtext">Daily Log</p>
+                </div>
+
+                <div class="tap-grid log-hub-grid">
+                    <button type="button" class="breed-option" data-open-log="feed-purchase">🌾<span>Chakula Kununuliwa / Feed Bought</span></button>
+                    <button type="button" class="breed-option" data-open-log="feed-consumption">🍽️<span>Chakula Kutumika / Feed Used</span></button>
+                    <button type="button" class="breed-option" data-open-log="eggs">🥚<span>Mayai / Eggs</span></button>
+                    <button type="button" class="breed-option" data-open-log="mortality">⚠️<span>Vifo / Mortality</span></button>
+                    <button type="button" class="breed-option" data-open-log="cost">💵<span>Gharama Nyingine / Other Costs</span></button>
+                </div>
+
+                <div class="card">
+                    <h2 style="font-size:1.05rem;">Shughuli za Hivi Karibuni / Recent Activity</h2>
+                    <ul class="data-list" id="recent-activity-list"></ul>
+                </div>
+
+                <button type="button" class="btn-link" data-back-to-dashboard>Rudi / Back to dashboard</button>
+            </section>
+
+            <!-- Log: feed purchase -->
+            <section id="screen-log-feed-purchase" class="screen hidden">
+                <div class="intro-block"><h2>Chakula Kilichonunuliwa</h2><p class="subtext">Log a feed purchase</p></div>
+                <div class="card">
+                    <form id="form-log-feed-purchase" novalidate>
+                        <label class="form-label">Chanzo / Source</label>
+                        <div class="tap-grid two-col">
+                            <button type="button" class="mini-option" data-field="source" data-value="bought">Nimenunua / Bought</button>
+                            <button type="button" class="mini-option" data-field="source" data-value="home_made">Nimetengeneza / Home-made</button>
+                        </div>
+                        <input type="hidden" id="input-feedpurchase-source" value="bought">
+
+                        <label class="form-label">Aina ya Chakula / Feed type</label>
+                        <div class="tap-grid two-col">
+                            <button type="button" class="mini-option" data-field="feed_type" data-value="starter">Starter</button>
+                            <button type="button" class="mini-option" data-field="feed_type" data-value="grower">Grower</button>
+                            <button type="button" class="mini-option" data-field="feed_type" data-value="layers_mash">Layers Mash</button>
+                            <button type="button" class="mini-option" data-field="feed_type" data-value="other">Nyingine / Other</button>
+                        </div>
+                        <input type="hidden" id="input-feedpurchase-feedtype">
+
+                        <label class="form-label" for="input-feedpurchase-batch">Kundi / Batch (optional)</label>
+                        <select id="input-feedpurchase-batch" class="text-input batch-select"><option value="">Yote / All batches</option></select>
+
+                        <label class="form-label" for="input-feedpurchase-qty">Kiasi (kg) / Quantity (kg)</label>
+                        <input type="number" id="input-feedpurchase-qty" class="text-input" inputmode="decimal" min="0.1" step="0.1" required>
+
+                        <label class="form-label" for="input-feedpurchase-cost">Gharama Jumla / Total cost</label>
+                        <input type="number" id="input-feedpurchase-cost" class="text-input" inputmode="decimal" min="0" step="0.01" required>
+
+                        <label class="form-label" for="input-feedpurchase-date">Tarehe / Date</label>
+                        <input type="date" id="input-feedpurchase-date" class="text-input" required>
+
+                        <label class="form-label" for="input-feedpurchase-notes">Maelezo / Notes (optional)</label>
+                        <input type="text" id="input-feedpurchase-notes" class="text-input">
+
+                        <p class="field-error" id="error-log-feed-purchase"></p>
+                        <button type="submit" class="btn-primary"><span class="spinner" aria-hidden="true"></span><span class="btn-label">Hifadhi / Save</span></button>
+                        <button type="button" class="btn-link" data-back-to-daily-log>Ghairi / Cancel</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Log: feed consumption -->
+            <section id="screen-log-feed-consumption" class="screen hidden">
+                <div class="intro-block"><h2>Chakula Kilichotumika</h2><p class="subtext">Log feed consumption</p></div>
+                <div class="card">
+                    <form id="form-log-feed-consumption" novalidate>
+                        <label class="form-label" for="input-feedcons-batch">Kundi / Batch</label>
+                        <select id="input-feedcons-batch" class="text-input batch-select" required><option value="">Chagua kundi / Select a batch</option></select>
+
+                        <label class="form-label" for="input-feedcons-qty">Kiasi Kilichotumika (kg) / Quantity consumed (kg)</label>
+                        <input type="number" id="input-feedcons-qty" class="text-input" inputmode="decimal" min="0.1" step="0.1" required>
+
+                        <label class="form-label" for="input-feedcons-date">Tarehe / Date</label>
+                        <input type="date" id="input-feedcons-date" class="text-input" required>
+
+                        <label class="form-label" for="input-feedcons-notes">Maelezo / Notes (optional)</label>
+                        <input type="text" id="input-feedcons-notes" class="text-input">
+
+                        <p class="field-error" id="error-log-feed-consumption"></p>
+                        <button type="submit" class="btn-primary"><span class="spinner" aria-hidden="true"></span><span class="btn-label">Hifadhi / Save</span></button>
+                        <button type="button" class="btn-link" data-back-to-daily-log>Ghairi / Cancel</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Log: eggs -->
+            <section id="screen-log-eggs" class="screen hidden">
+                <div class="intro-block"><h2>Mayai</h2><p class="subtext">Log egg production</p></div>
+                <div class="card">
+                    <form id="form-log-eggs" novalidate>
+                        <label class="form-label" for="input-eggs-batch">Kundi / Batch</label>
+                        <select id="input-eggs-batch" class="text-input batch-select" required><option value="">Chagua kundi / Select a batch</option></select>
+
+                        <label class="form-label" for="input-eggs-whole">Mayai Mazima / Whole eggs</label>
+                        <input type="number" id="input-eggs-whole" class="text-input" inputmode="numeric" min="0" value="0" required>
+
+                        <label class="form-label" for="input-eggs-broken">Mayai Yaliyovunjika / Broken eggs</label>
+                        <input type="number" id="input-eggs-broken" class="text-input" inputmode="numeric" min="0" value="0">
+
+                        <label class="form-label" for="input-eggs-date">Tarehe / Date</label>
+                        <input type="date" id="input-eggs-date" class="text-input" required>
+
+                        <label class="form-label" for="input-eggs-notes">Maelezo / Notes (optional)</label>
+                        <input type="text" id="input-eggs-notes" class="text-input">
+
+                        <p class="field-error" id="error-log-eggs"></p>
+                        <button type="submit" class="btn-primary"><span class="spinner" aria-hidden="true"></span><span class="btn-label">Hifadhi / Save</span></button>
+                        <button type="button" class="btn-link" data-back-to-daily-log>Ghairi / Cancel</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Log: mortality -->
+            <section id="screen-log-mortality" class="screen hidden">
+                <div class="intro-block"><h2>Vifo</h2><p class="subtext">Log mortality</p></div>
+                <div class="card">
+                    <form id="form-log-mortality" novalidate>
+                        <label class="form-label" for="input-mortality-batch">Kundi / Batch</label>
+                        <select id="input-mortality-batch" class="text-input batch-select" required><option value="">Chagua kundi / Select a batch</option></select>
+
+                        <label class="form-label" for="input-mortality-qty">Idadi Iliyokufa / Quantity</label>
+                        <input type="number" id="input-mortality-qty" class="text-input" inputmode="numeric" min="1" required>
+
+                        <label class="form-label">Sababu / Cause (optional)</label>
+                        <div class="tap-grid two-col">
+                            <button type="button" class="mini-option" data-field="cause" data-value="Ugonjwa / Disease">Ugonjwa / Disease</button>
+                            <button type="button" class="mini-option" data-field="cause" data-value="Mnyama / Predator">Mnyama / Predator</button>
+                            <button type="button" class="mini-option" data-field="cause" data-value="Joto / Heat">Joto / Heat</button>
+                            <button type="button" class="mini-option" data-field="cause" data-value="Haijulikani / Unknown">Haijulikani / Unknown</button>
+                        </div>
+                        <input type="hidden" id="input-mortality-cause">
+
+                        <label class="form-label" for="input-mortality-date">Tarehe / Date</label>
+                        <input type="date" id="input-mortality-date" class="text-input" required>
+
+                        <label class="form-label" for="input-mortality-notes">Maelezo / Notes (optional)</label>
+                        <input type="text" id="input-mortality-notes" class="text-input">
+
+                        <p class="field-error" id="error-log-mortality"></p>
+                        <button type="submit" class="btn-primary"><span class="spinner" aria-hidden="true"></span><span class="btn-label">Hifadhi / Save</span></button>
+                        <button type="button" class="btn-link" data-back-to-daily-log>Ghairi / Cancel</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Log: other costs (labor, utilities, medication, transport) -->
+            <section id="screen-log-cost" class="screen hidden">
+                <div class="intro-block"><h2>Gharama Nyingine</h2><p class="subtext">Labor, utilities, medication, transport</p></div>
+                <div class="card">
+                    <form id="form-log-cost" novalidate>
+                        <label class="form-label">Aina / Category</label>
+                        <div class="tap-grid" id="cost-category-picker">
+                            <button type="button" class="category-option" data-category="labor">👷<span>Nguvu Kazi / Labor</span></button>
+                            <button type="button" class="category-option" data-category="utilities">💡<span>Huduma / Utilities</span></button>
+                            <button type="button" class="category-option" data-category="medication">💊<span>Dawa / Medication</span></button>
+                            <button type="button" class="category-option" data-category="transport">🚚<span>Usafiri / Transport</span></button>
+                        </div>
+                        <input type="hidden" id="input-cost-category">
+
+                        <div id="labor-subtype-field" class="hidden">
+                            <label class="form-label">Posho au Mshahara? / Allowance or Salary?</label>
+                            <select id="input-cost-subtype" class="text-input">
+                                <option value="">—</option>
+                                <option value="allowance">Posho / Allowance</option>
+                                <option value="salary">Mshahara / Salary</option>
+                            </select>
+                        </div>
+
+                        <label class="form-label" for="input-cost-label" id="label-cost-label">Maelezo Mafupi / Short label</label>
+                        <input type="text" id="input-cost-label" class="text-input" placeholder="e.g. Amporium, Feeders, Water bill" required>
+
+                        <label class="form-label" for="input-cost-batch">Kundi / Batch (optional)</label>
+                        <select id="input-cost-batch" class="text-input batch-select"><option value="">Yote / All batches</option></select>
+
+                        <label class="form-label" for="input-cost-amount">Kiasi / Amount</label>
+                        <input type="number" id="input-cost-amount" class="text-input" inputmode="decimal" min="0" step="0.01" required>
+
+                        <label class="form-label" for="input-cost-date">Tarehe / Date</label>
+                        <input type="date" id="input-cost-date" class="text-input" required>
+
+                        <label class="form-label" for="input-cost-notes">Maelezo Zaidi / Notes (optional)</label>
+                        <input type="text" id="input-cost-notes" class="text-input">
+
+                        <p class="field-error" id="error-log-cost"></p>
+                        <button type="submit" class="btn-primary"><span class="spinner" aria-hidden="true"></span><span class="btn-label">Hifadhi / Save</span></button>
+                        <button type="button" class="btn-link" data-back-to-daily-log>Ghairi / Cancel</button>
+                    </form>
+                </div>
+            </section>
         </main>
     </div>
 
     <script src="<?= htmlspecialchars($asset('assets/js/app.js')) ?>"></script>
     <script src="<?= htmlspecialchars($asset('assets/js/db.js')) ?>"></script>
+    <script src="<?= htmlspecialchars($asset('assets/js/sync.js')) ?>"></script>
     <script src="<?= htmlspecialchars($asset('assets/js/auth.js')) ?>"></script>
     <script src="<?= htmlspecialchars($asset('assets/js/batches.js')) ?>"></script>
+    <script src="<?= htmlspecialchars($asset('assets/js/logs.js')) ?>"></script>
 </body>
 </html>
