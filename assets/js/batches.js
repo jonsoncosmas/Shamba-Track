@@ -49,7 +49,10 @@
 
     function renderBatchRow(b) {
         const pending = b.synced ? '' : ' <span class="pending-badge" title="Bado kutumwa / Not synced yet">●</span>';
-        return `<li><strong>${BREED_LABELS[b.breed] || b.breed}</strong> — ${b.quantity} birds · ${b.date_acquired}${pending}</li>`;
+        return `<li class="batch-row">
+            <span><strong>${BREED_LABELS[b.breed] || b.breed}</strong> — ${b.quantity} birds · ${b.date_acquired}${pending}</span>
+            <button type="button" class="btn-tiny view-vaccinations" data-batch-uuid="${b.client_uuid}">💉 Chanjo</button>
+        </li>`;
     }
 
     function renderInfraRow(i) {
@@ -151,6 +154,11 @@
 
             // Write locally FIRST — this is what makes it work offline.
             await ShambaDB.put('batches', record);
+
+            // Let anything interested (currently: vaccinations.js) react to
+            // a new batch without batches.js needing to know it exists.
+            window.dispatchEvent(new CustomEvent('shambatrack:batch-created', { detail: record }));
+
             showAppScreen('screen-dashboard');
             renderDashboardLists();
 

@@ -136,6 +136,8 @@ $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
                     <h1>Karibu, <span id="dashboard-farm-name"></span></h1>
                 </div>
 
+                <div id="vaccination-alert-banner" class="vaccination-alert hidden"></div>
+
                 <button type="button" class="btn-primary" id="btn-open-daily-log" style="margin-top:0;">
                     <span class="btn-label">📋 Rekodi ya Leo / Daily Log</span>
                 </button>
@@ -441,6 +443,17 @@ $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
                     </form>
                 </div>
             </section>
+            <!-- Vaccination schedule for one batch -->
+            <section id="screen-vaccination-schedule" class="screen hidden">
+                <div class="intro-block">
+                    <h2>Ratiba ya Chanjo</h2>
+                    <p class="subtext" id="vaccination-batch-label"></p>
+                </div>
+                <div class="card">
+                    <ul class="data-list" id="vaccination-checklist"></ul>
+                </div>
+                <button type="button" class="btn-link" data-back-to-dashboard>Rudi / Back to dashboard</button>
+            </section>
         </main>
     </div>
 
@@ -450,5 +463,6 @@ $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
     <script src="<?= htmlspecialchars($asset('assets/js/auth.js')) ?>"></script>
     <script src="<?= htmlspecialchars($asset('assets/js/batches.js')) ?>"></script>
     <script src="<?= htmlspecialchars($asset('assets/js/logs.js')) ?>"></script>
+    <script src="<?= htmlspecialchars($asset('assets/js/vaccinations.js')) ?>"></script>
 </body>
 </html>
