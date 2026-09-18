@@ -22,6 +22,7 @@ const ShambaSync = (function () {
         mortality: '/mortality',
         costs: '/costs',
         vaccinations: '/vaccinations',
+        sales: '/sales',
     };
 
     let inFlight = false;

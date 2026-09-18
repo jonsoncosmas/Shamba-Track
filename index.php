@@ -262,6 +262,7 @@ $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
                     <button type="button" class="breed-option" data-open-log="eggs">🥚<span>Mayai / Eggs</span></button>
                     <button type="button" class="breed-option" data-open-log="mortality">⚠️<span>Vifo / Mortality</span></button>
                     <button type="button" class="breed-option" data-open-log="cost">💵<span>Gharama Nyingine / Other Costs</span></button>
+                    <button type="button" class="breed-option" data-open-log="sale">💰<span>Mauzo / Sales</span></button>
                 </div>
 
                 <div class="card">
@@ -453,6 +454,52 @@ $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
                     <ul class="data-list" id="vaccination-checklist"></ul>
                 </div>
                 <button type="button" class="btn-link" data-back-to-dashboard>Rudi / Back to dashboard</button>
+            </section>
+            <!-- Log: sale -->
+            <section id="screen-log-sale" class="screen hidden">
+                <div class="intro-block"><h2>Mauzo</h2><p class="subtext">Log a sale</p></div>
+                <div class="card">
+                    <form id="form-log-sale" novalidate>
+                        <label class="form-label">Aina / What sold</label>
+                        <div class="tap-grid" id="sale-type-picker">
+                            <button type="button" class="category-option" data-sale-type="eggs">🥚<span>Mayai / Eggs</span></button>
+                            <button type="button" class="category-option" data-sale-type="birds">🐔<span>Kuku / Birds</span></button>
+                            <button type="button" class="category-option" data-sale-type="manure">💩<span>Mbolea / Manure</span></button>
+                            <button type="button" class="category-option" data-sale-type="other">📦<span>Nyingine / Other</span></button>
+                        </div>
+                        <input type="hidden" id="input-sale-type">
+
+                        <label class="form-label" for="input-sale-batch">Kundi / Batch (optional)</label>
+                        <select id="input-sale-batch" class="text-input batch-select"><option value="">Yote / All batches</option></select>
+
+                        <label class="form-label" for="input-sale-quantity" id="label-sale-quantity">Idadi / Quantity</label>
+                        <input type="number" id="input-sale-quantity" class="text-input" inputmode="decimal" min="0.01" step="0.01" required>
+
+                        <div id="sale-weight-field" class="hidden">
+                            <label class="form-label" for="input-sale-weight">Uzito (kg) / Weight (kg) (optional)</label>
+                            <input type="number" id="input-sale-weight" class="text-input" inputmode="decimal" min="0" step="0.1">
+                        </div>
+
+                        <label class="form-label" for="input-sale-unitprice">Bei kwa Kila Kimoja / Price per unit</label>
+                        <input type="number" id="input-sale-unitprice" class="text-input" inputmode="decimal" min="0" step="0.01" required>
+
+                        <label class="form-label" for="input-sale-total">Jumla / Total amount</label>
+                        <input type="number" id="input-sale-total" class="text-input" inputmode="decimal" min="0" step="0.01" required>
+
+                        <label class="form-label" for="input-sale-buyer">Mnunuzi / Buyer (optional)</label>
+                        <input type="text" id="input-sale-buyer" class="text-input">
+
+                        <label class="form-label" for="input-sale-date">Tarehe / Date</label>
+                        <input type="date" id="input-sale-date" class="text-input" required>
+
+                        <label class="form-label" for="input-sale-notes">Maelezo / Notes (optional)</label>
+                        <input type="text" id="input-sale-notes" class="text-input">
+
+                        <p class="field-error" id="error-log-sale"></p>
+                        <button type="submit" class="btn-primary"><span class="spinner" aria-hidden="true"></span><span class="btn-label">Hifadhi / Save</span></button>
+                        <button type="button" class="btn-link" data-back-to-daily-log>Ghairi / Cancel</button>
+                    </form>
+                </div>
             </section>
         </main>
     </div>

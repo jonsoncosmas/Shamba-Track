@@ -14,8 +14,8 @@ const ShambaDB = (function () {
     'use strict';
 
     const DB_NAME = 'shambatrack';
-    const DB_VERSION = 3;
-    const STORES = ['batches', 'infrastructure', 'feed_purchases', 'feed_consumption', 'eggs', 'mortality', 'costs', 'vaccinations'];
+    const DB_VERSION = 4;
+    const STORES = ['batches', 'infrastructure', 'feed_purchases', 'feed_consumption', 'eggs', 'mortality', 'costs', 'vaccinations', 'sales'];
 
     let dbPromise = null;
 

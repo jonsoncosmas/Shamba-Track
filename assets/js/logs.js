@@ -80,6 +80,7 @@
             'eggs': 'form-log-eggs',
             'mortality': 'form-log-mortality',
             'cost': 'form-log-cost',
+            'sale': 'form-log-sale',
         };
         const form = $(formMap[target]);
         if (form) form.reset();
@@ -101,6 +102,11 @@
             $('input-cost-category').value = '';
             $('labor-subtype-field').classList.add('hidden');
             $('label-cost-label').textContent = 'Maelezo Mafupi / Short label';
+        }
+        if (target === 'sale') {
+            $('input-sale-type').value = '';
+            $('sale-weight-field').classList.add('hidden');
+            $('label-sale-quantity').textContent = 'Idadi / Quantity';
         }
     }
 
@@ -135,6 +141,42 @@
             $('labor-subtype-field').classList.toggle('hidden', category !== 'labor');
             $('label-cost-label').textContent = COST_LABEL_PROMPTS[category] || 'Maelezo Mafupi / Short label';
         });
+    }
+
+    // ---- Sale-type picker ----
+    const SALE_QUANTITY_LABELS = {
+        eggs: 'Idadi ya Mayai / Number of eggs',
+        birds: 'Idadi ya Kuku / Number of birds',
+        manure: 'Kiasi (kg) / Quantity (kg)',
+        other: 'Idadi / Quantity',
+    };
+
+    function bindSaleTypePicker() {
+        const group = $('sale-type-picker');
+        if (!group) return;
+        group.addEventListener('click', (e) => {
+            const card = e.target.closest('.category-option');
+            if (!card) return;
+            group.querySelectorAll('.category-option').forEach((el) => el.classList.remove('is-selected'));
+            card.classList.add('is-selected');
+            const saleType = card.dataset.saleType;
+            $('input-sale-type').value = saleType;
+            $('label-sale-quantity').textContent = SALE_QUANTITY_LABELS[saleType] || 'Idadi / Quantity';
+            $('sale-weight-field').classList.toggle('hidden', saleType !== 'birds');
+        });
+    }
+
+    // ---- Sale total auto-calculation (quantity x unit price), still editable ----
+    function bindSaleTotalCalc() {
+        const recalc = () => {
+            const qty = parseFloat($('input-sale-quantity').value || '0');
+            const price = parseFloat($('input-sale-unitprice').value || '0');
+            if (qty > 0 && price > 0) {
+                $('input-sale-total').value = (qty * price).toFixed(2);
+            }
+        };
+        $('input-sale-quantity').addEventListener('input', recalc);
+        $('input-sale-unitprice').addEventListener('input', recalc);
     }
 
     // ---- Forms ----
@@ -268,19 +310,53 @@
         });
     }
 
+    function bindSaleForm() {
+        $('form-log-sale').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            setError('error-log-sale', '');
+
+            const saleType = $('input-sale-type').value;
+            const batchUuid = $('input-sale-batch').value || null;
+            const quantity = parseFloat($('input-sale-quantity').value || '0');
+            const weightKg = $('input-sale-weight').value ? parseFloat($('input-sale-weight').value) : null;
+            const unitPrice = parseFloat($('input-sale-unitprice').value || '0');
+            const totalAmount = parseFloat($('input-sale-total').value || '0');
+            const buyer = $('input-sale-buyer').value.trim();
+            const date = $('input-sale-date').value;
+            const notes = $('input-sale-notes').value.trim();
+
+            if (!saleType) { setError('error-log-sale', 'Chagua kilichouzwa. / Select what was sold.'); return; }
+            if (!quantity || quantity <= 0) { setError('error-log-sale', 'Weka idadi sahihi. / Enter a valid quantity.'); return; }
+            if (!totalAmount || totalAmount <= 0) { setError('error-log-sale', 'Weka jumla sahihi. / Enter a valid total amount.'); return; }
+            if (!date) { setError('error-log-sale', 'Weka tarehe. / Enter a date.'); return; }
+
+            await ShambaDB.put('sales', {
+                client_uuid: uuid(), batch_client_uuid: batchUuid, sale_type: saleType,
+                quantity, unit: saleType === 'birds' ? 'birds' : (saleType === 'eggs' ? 'eggs' : null),
+                weight_kg: saleType === 'birds' ? weightKg : null, unit_price: unitPrice, total_amount: totalAmount,
+                buyer: buyer || null, date_sold: date, notes: notes || null, synced: false,
+            });
+            showAppScreen('screen-daily-log');
+            renderRecentActivity();
+            ShambaSync.syncPending();
+        });
+    }
+
     // ---- Recent activity list (combined view across all 5 log types) ----
     const CATEGORY_ICONS = { labor: '👷', utilities: '💡', medication: '💊', transport: '🚚' };
+    const SALE_ICONS = { eggs: '🥚', birds: '🐔', manure: '💩', other: '📦' };
 
     async function renderRecentActivity() {
         const listEl = $('recent-activity-list');
         if (!listEl) return;
 
-        const [feedPurchases, feedConsumption, eggs, mortality, costs] = await Promise.all([
+        const [feedPurchases, feedConsumption, eggs, mortality, costs, sales] = await Promise.all([
             ShambaDB.getAll('feed_purchases'),
             ShambaDB.getAll('feed_consumption'),
             ShambaDB.getAll('eggs'),
             ShambaDB.getAll('mortality'),
             ShambaDB.getAll('costs'),
+            ShambaDB.getAll('sales'),
         ]);
 
         const rows = [
@@ -289,6 +365,7 @@
             ...eggs.map((r) => ({ date: r.date_collected, synced: r.synced, html: `🥚 Mayai: ${r.quantity_whole} mazima, ${r.quantity_broken} yamevunjika` })),
             ...mortality.map((r) => ({ date: r.date_occurred, synced: r.synced, html: `⚠️ Vifo: ${r.quantity}${r.cause ? ' — ' + r.cause : ''}` })),
             ...costs.map((r) => ({ date: r.date_incurred, synced: r.synced, html: `${CATEGORY_ICONS[r.category] || '💵'} ${r.label}: ${r.amount}` })),
+            ...sales.map((r) => ({ date: r.date_sold, synced: r.synced, html: `${SALE_ICONS[r.sale_type] || '💰'} Mauzo: ${r.quantity} ${r.sale_type} — ${r.total_amount}` })),
         ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 15);
 
         listEl.innerHTML = rows.length
@@ -305,11 +382,14 @@
             bindNav();
             bindMiniOptions();
             bindCostCategoryPicker();
+            bindSaleTypePicker();
+            bindSaleTotalCalc();
             bindFeedPurchaseForm();
             bindFeedConsumptionForm();
             bindEggsForm();
             bindMortalityForm();
             bindCostForm();
+            bindSaleForm();
         } catch (err) {
             console.error('[ShambaTrack] logs.js init failed:', err);
         }
