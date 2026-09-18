@@ -136,7 +136,7 @@ $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
                     <h1>Karibu, <span id="dashboard-farm-name"></span></h1>
                 </div>
 
-                <div id="vaccination-alert-banner" class="vaccination-alert hidden"></div>
+                <div id="vaccination-alert-banner" class="vaccination-alert hidden" role="button" tabindex="0"></div>
 
                 <button type="button" class="btn-primary" id="btn-open-daily-log" style="margin-top:0;">
                     <span class="btn-label">📋 Rekodi ya Leo / Daily Log</span>
@@ -501,6 +501,37 @@ $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
                     </form>
                 </div>
             </section>
+            <!-- Batch insights: Phase 6 smart calculations -->
+            <section id="screen-batch-insights" class="screen hidden">
+                <div class="intro-block">
+                    <h2>Takwimu za Kundi</h2>
+                    <p class="subtext" id="insights-batch-label"></p>
+                </div>
+
+                <div id="insights-anomaly-list"></div>
+
+                <div class="card">
+                    <h2 style="font-size:1.05rem;">Uwiano wa Chakula / Feed Conversion (FCR)</h2>
+                    <div id="insights-fcr"></div>
+                </div>
+
+                <div class="card">
+                    <h2 style="font-size:1.05rem;">Chakula Kilichobaki / Feed Remaining</h2>
+                    <div id="insights-feed-days"></div>
+                </div>
+
+                <div class="card">
+                    <h2 style="font-size:1.05rem;">Kiwango cha Kuvunja Sawa / Break-even</h2>
+                    <div id="insights-breakeven"></div>
+                </div>
+
+                <div class="card">
+                    <h2 style="font-size:1.05rem;">Kununua dhidi ya Kutengeneza / Buy vs Make Feed</h2>
+                    <div id="insights-buy-vs-make"></div>
+                </div>
+
+                <button type="button" class="btn-link" data-back-to-dashboard>Rudi / Back to dashboard</button>
+            </section>
         </main>
     </div>
 
@@ -511,5 +542,6 @@ $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
     <script src="<?= htmlspecialchars($asset('assets/js/batches.js')) ?>"></script>
     <script src="<?= htmlspecialchars($asset('assets/js/logs.js')) ?>"></script>
     <script src="<?= htmlspecialchars($asset('assets/js/vaccinations.js')) ?>"></script>
+    <script src="<?= htmlspecialchars($asset('assets/js/insights.js')) ?>"></script>
 </body>
 </html>

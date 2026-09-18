@@ -155,7 +155,10 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .vaccination-alert {
     background: var(--color-alert-soft); color: var(--color-alert); border: 1px solid rgba(181, 72, 46, 0.25);
     padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem;
+    cursor: pointer; transition: background-color 150ms var(--ease);
 }
+.vaccination-alert:hover, .vaccination-alert:active { background: #F0D5C9; }
+.vaccination-alert .tap-hint { font-weight: 500; opacity: 0.8; font-size: 0.82rem; }
 .vaccination-alert.hidden { display: none; }
 
 .btn-tiny {
@@ -163,7 +166,8 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
     background: var(--color-primary-soft); color: var(--color-primary); flex-shrink: 0;
 }
 
-.batch-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.batch-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
+.batch-row__actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
 
 .vaccination-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
 .status-tag { font-weight: 700; }
@@ -172,6 +176,12 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .status-tag--upcoming { color: var(--color-text-muted); }
 .status-tag--done { color: var(--color-success); }
 .vaccination-row--done { opacity: 0.7; }
+
+/* --- Phase 6: insights --- */
+.anomaly-flag {
+    background: var(--color-alert-soft); color: var(--color-alert); border: 1px solid rgba(181, 72, 46, 0.25);
+    padding: 0.7rem 0.9rem; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.6rem;
+}
 
 .offline-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1.5rem; font-family: var(--font-body); background: var(--color-bg); color: var(--color-text); }
 .offline-card { background: var(--color-surface); border-radius: var(--radius-lg); padding: 2.5rem 2rem; text-align: center; max-width: 420px; border: 1px solid var(--color-border); }

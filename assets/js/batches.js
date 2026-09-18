@@ -51,7 +51,10 @@
         const pending = b.synced ? '' : ' <span class="pending-badge" title="Bado kutumwa / Not synced yet">●</span>';
         return `<li class="batch-row">
             <span><strong>${BREED_LABELS[b.breed] || b.breed}</strong> — ${b.quantity} birds · ${b.date_acquired}${pending}</span>
-            <button type="button" class="btn-tiny view-vaccinations" data-batch-uuid="${b.client_uuid}">💉 Chanjo</button>
+            <span class="batch-row__actions">
+                <button type="button" class="btn-tiny view-vaccinations" data-batch-uuid="${b.client_uuid}">💉 Chanjo</button>
+                <button type="button" class="btn-tiny view-insights" data-batch-uuid="${b.client_uuid}">📊 Takwimu</button>
+            </span>
         </li>`;
     }
 

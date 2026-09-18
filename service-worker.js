@@ -5,7 +5,7 @@
  * a domain root (production) or a local subfolder (dev) automatically.
  */
 
-const CACHE_VERSION = 'shamba-track-shell-v9';
+const CACHE_VERSION = 'shamba-track-shell-v10';
 
 const BASE = self.location.pathname.replace(/service-worker\.js$/, '');
 
@@ -22,6 +22,7 @@ const SHELL_ASSETS = [
     BASE + 'assets/js/batches.js',
     BASE + 'assets/js/logs.js',
     BASE + 'assets/js/vaccinations.js',
+    BASE + 'assets/js/insights.js',
     BASE + 'assets/icons/icon-192.png',
     BASE + 'assets/icons/icon-512.png',
 ];

@@ -102,8 +102,14 @@
         if (urgent.length === 0) {
             banner.classList.add('hidden');
             banner.innerHTML = '';
+            delete banner.dataset.batchUuid;
             return;
         }
+
+        // Most urgent = earliest due date (the longest overdue, or today's).
+        // That's the batch the tap should take the farmer straight to.
+        urgent.sort((a, b) => a.due_date.localeCompare(b.due_date));
+        banner.dataset.batchUuid = urgent[0].batch_client_uuid;
 
         const overdueCount = urgent.filter((r) => classify(r) === 'overdue').length;
         const todayCount = urgent.filter((r) => classify(r) === 'today').length;
@@ -111,7 +117,7 @@
         if (overdueCount) parts.push(`${overdueCount} zimechelewa`);
         if (todayCount) parts.push(`${todayCount} leo`);
 
-        banner.innerHTML = `💉 Una chanjo ${parts.join(', ')} / You have vaccinations due`;
+        banner.innerHTML = `💉 Una chanjo ${parts.join(', ')} / You have vaccinations due <span class="tap-hint">— Gusa kuona / Tap to view →</span>`;
         banner.classList.remove('hidden');
     }
 
@@ -162,8 +168,15 @@
         }).join('');
     }
 
-    // Delegated click: any "💉 Chanjo" button on the dashboard batch list
+    // Delegated click: any "💉 Chanjo" button on the dashboard batch list,
+    // or the dashboard alert banner itself
     document.addEventListener('click', (e) => {
+        const banner = e.target.closest('#vaccination-alert-banner');
+        if (banner && banner.dataset.batchUuid) {
+            openScheduleForBatch(banner.dataset.batchUuid);
+            return;
+        }
+
         const viewBtn = e.target.closest('.view-vaccinations');
         if (viewBtn) {
             openScheduleForBatch(viewBtn.dataset.batchUuid);
@@ -172,6 +185,15 @@
 
         const doneBtn = e.target.closest('.mark-done');
         if (doneBtn) markDone(doneBtn.dataset.uuid);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const banner = e.target.closest('#vaccination-alert-banner');
+        if (banner && banner.dataset.batchUuid) {
+            e.preventDefault();
+            openScheduleForBatch(banner.dataset.batchUuid);
+        }
     });
 
     async function markDone(clientUuid) {
