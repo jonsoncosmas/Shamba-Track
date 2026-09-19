@@ -15,6 +15,7 @@ use ShambaTrack\Controllers\MortalityLogController;
 use ShambaTrack\Controllers\CostEntryController;
 use ShambaTrack\Controllers\VaccinationController;
 use ShambaTrack\Controllers\SaleController;
+use ShambaTrack\Controllers\CapitalSourceController;
 
 $route = trim($_GET['route'] ?? '', '/');
 $method = Request::method();
@@ -51,6 +52,9 @@ $routes = [
 
     'POST /sales'             => [SaleController::class, 'create'],
     'GET /sales'              => [SaleController::class, 'list'],
+
+    'POST /capital-sources'   => [CapitalSourceController::class, 'create'],
+    'GET /capital-sources'    => [CapitalSourceController::class, 'list'],
 ];
 
 $key = $method . ' /' . $route;

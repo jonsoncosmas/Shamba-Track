@@ -23,6 +23,7 @@ const ShambaSync = (function () {
         costs: '/costs',
         vaccinations: '/vaccinations',
         sales: '/sales',
+        capital_sources: '/capital-sources',
     };
 
     let inFlight = false;

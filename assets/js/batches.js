@@ -33,10 +33,12 @@
     async function renderDashboardLists() {
         const batchesEl = $('dashboard-batches-list');
         const infraEl = $('dashboard-infra-list');
+        const capitalEl = $('dashboard-capital-list');
         if (!batchesEl || !infraEl) return;
 
         const batches = (await ShambaDB.getAll('batches')).sort((a, b) => b.date_acquired.localeCompare(a.date_acquired));
         const infra = (await ShambaDB.getAll('infrastructure')).sort((a, b) => b.date_incurred.localeCompare(a.date_incurred));
+        const capital = (await ShambaDB.getAll('capital_sources')).sort((a, b) => b.date_received.localeCompare(a.date_received));
 
         batchesEl.innerHTML = batches.length
             ? batches.map(renderBatchRow).join('')
@@ -45,6 +47,12 @@
         infraEl.innerHTML = infra.length
             ? infra.map(renderInfraRow).join('')
             : '<li class="empty-row">Bado hakuna gharama / No costs logged yet</li>';
+
+        if (capitalEl) {
+            capitalEl.innerHTML = capital.length
+                ? capital.map(renderCapitalRow).join('')
+                : '<li class="empty-row">Bado hakuna mtaji uliorekodiwa / No capital logged yet</li>';
+        }
     }
 
     function renderBatchRow(b) {
@@ -62,6 +70,14 @@
         const pending = i.synced ? '' : ' <span class="pending-badge" title="Bado kutumwa / Not synced yet">●</span>';
         const landNote = i.land_status ? ` (${i.land_status})` : '';
         return `<li><strong>${i.item_name}</strong>${landNote} — ${CATEGORY_LABELS[i.category] || i.category} · ${i.date_incurred}${pending}</li>`;
+    }
+
+    const CAPITAL_LABELS = { loan: 'Mkopo / Loan', salary: 'Mshahara / Salary', freelance: 'Freelance', savings: 'Akiba / Savings', other: 'Nyingine / Other' };
+
+    function renderCapitalRow(c) {
+        const pending = c.synced ? '' : ' <span class="pending-badge" title="Bado kutumwa / Not synced yet">●</span>';
+        const interestNote = c.interest_rate ? ` (riba ${c.interest_rate}%)` : '';
+        return `<li><strong>${CAPITAL_LABELS[c.source_type] || c.source_type}</strong>${interestNote} — ${c.amount} · ${c.date_received}${pending}</li>`;
     }
 
     // ---- Screen navigation helpers (reuses .screen/.hidden convention from auth.js) ----
@@ -86,6 +102,54 @@
             $('land-status-field').classList.add('hidden');
             setError('error-add-infrastructure', '');
             showAppScreen('screen-add-infrastructure');
+        });
+
+        $('btn-add-capital')?.addEventListener('click', () => {
+            $('form-add-capital').reset();
+            $('capital-source-picker').querySelectorAll('.category-option').forEach((el) => el.classList.remove('is-selected'));
+            $('input-capital-type').value = '';
+            $('capital-interest-field').classList.add('hidden');
+            setError('error-add-capital', '');
+            showAppScreen('screen-add-capital');
+        });
+
+        $('btn-open-reports')?.addEventListener('click', () => {
+            showAppScreen('screen-reports');
+            window.dispatchEvent(new CustomEvent('shambatrack:open-reports'));
+        });
+
+        $('capital-source-picker')?.addEventListener('click', (e) => {
+            const card = e.target.closest('.category-option');
+            if (!card) return;
+            $('capital-source-picker').querySelectorAll('.category-option').forEach((el) => el.classList.remove('is-selected'));
+            card.classList.add('is-selected');
+            const sourceType = card.dataset.sourceType;
+            $('input-capital-type').value = sourceType;
+            $('capital-interest-field').classList.toggle('hidden', sourceType !== 'loan');
+        });
+
+        $('form-add-capital')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            setError('error-add-capital', '');
+
+            const sourceType = $('input-capital-type').value;
+            const amount = parseFloat($('input-capital-amount').value || '0');
+            const interestRate = $('input-capital-interest').value ? parseFloat($('input-capital-interest').value) : null;
+            const date = $('input-capital-date').value;
+            const notes = $('input-capital-notes').value.trim();
+
+            if (!sourceType) { setError('error-add-capital', 'Chagua chanzo. / Select a source.'); return; }
+            if (!amount || amount <= 0) { setError('error-add-capital', 'Weka kiasi sahihi. / Enter a valid amount.'); return; }
+            if (!date) { setError('error-add-capital', 'Weka tarehe. / Enter a date.'); return; }
+
+            await ShambaDB.put('capital_sources', {
+                client_uuid: uuid(), source_type: sourceType, amount,
+                interest_rate: sourceType === 'loan' ? interestRate : null,
+                date_received: date, notes: notes || null, synced: false,
+            });
+            showAppScreen('screen-dashboard');
+            renderDashboardLists();
+            ShambaSync.syncPending();
         });
 
         document.querySelectorAll('[data-back-to-dashboard]').forEach((btn) => {

@@ -158,6 +158,18 @@ $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
                     <ul class="data-list" id="dashboard-infra-list"></ul>
                 </div>
 
+                <div class="card">
+                    <div class="dashboard-section-header">
+                        <h2>Vyanzo vya Mtaji / Capital Sources</h2>
+                        <button type="button" class="btn-small" id="btn-add-capital">+ Ongeza / Add</button>
+                    </div>
+                    <ul class="data-list" id="dashboard-capital-list"></ul>
+                </div>
+
+                <button type="button" class="btn-primary" id="btn-open-reports">
+                    <span class="btn-label">📈 Ripoti Kamili / Full Report</span>
+                </button>
+
                 <button type="button" class="btn-link" id="btn-logout">Toka / Log out</button>
             </section>
 
@@ -532,6 +544,68 @@ $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
 
                 <button type="button" class="btn-link" data-back-to-dashboard>Rudi / Back to dashboard</button>
             </section>
+            <!-- Add capital source -->
+            <section id="screen-add-capital" class="screen hidden">
+                <div class="intro-block"><h2>Ongeza Chanzo cha Mtaji</h2><p class="subtext">Add a capital source</p></div>
+                <div class="card">
+                    <form id="form-add-capital" novalidate>
+                        <label class="form-label">Chanzo / Source</label>
+                        <div class="tap-grid" id="capital-source-picker">
+                            <button type="button" class="category-option" data-source-type="loan">🏦<span>Mkopo / Loan</span></button>
+                            <button type="button" class="category-option" data-source-type="salary">💼<span>Mshahara / Salary</span></button>
+                            <button type="button" class="category-option" data-source-type="freelance">🧑‍💻<span>Kazi za Ziada / Freelance</span></button>
+                            <button type="button" class="category-option" data-source-type="savings">🐖<span>Akiba / Savings</span></button>
+                            <button type="button" class="category-option" data-source-type="other">📦<span>Nyingine / Other</span></button>
+                        </div>
+                        <input type="hidden" id="input-capital-type">
+
+                        <div id="capital-interest-field" class="hidden">
+                            <label class="form-label" for="input-capital-interest">Riba (%) / Interest rate (%)</label>
+                            <input type="number" id="input-capital-interest" class="text-input" inputmode="decimal" min="0" max="100" step="0.1">
+                        </div>
+
+                        <label class="form-label" for="input-capital-amount">Kiasi / Amount</label>
+                        <input type="number" id="input-capital-amount" class="text-input" inputmode="decimal" min="0.01" step="0.01" required>
+
+                        <label class="form-label" for="input-capital-date">Tarehe / Date received</label>
+                        <input type="date" id="input-capital-date" class="text-input" required>
+
+                        <label class="form-label" for="input-capital-notes">Maelezo / Notes (optional)</label>
+                        <input type="text" id="input-capital-notes" class="text-input">
+
+                        <p class="field-error" id="error-add-capital"></p>
+                        <button type="submit" class="btn-primary"><span class="spinner" aria-hidden="true"></span><span class="btn-label">Hifadhi / Save</span></button>
+                        <button type="button" class="btn-link" data-back-to-dashboard>Ghairi / Cancel</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Full financial report -->
+            <section id="screen-reports" class="screen hidden">
+                <div class="intro-block"><h2>Ripoti Kamili</h2><p class="subtext">Full financial report</p></div>
+
+                <div class="card">
+                    <h2 style="font-size:1.05rem;">Muhtasari wa Shamba / Farm Summary</h2>
+                    <div id="report-summary"></div>
+                </div>
+
+                <div class="card">
+                    <h2 style="font-size:1.05rem;">Mgawanyo wa Gharama / Expense Breakdown</h2>
+                    <div id="report-expense-chart"></div>
+                </div>
+
+                <div class="card">
+                    <h2 style="font-size:1.05rem;">Faida kwa Kila Kundi / Profit per Batch</h2>
+                    <div id="report-batch-table"></div>
+                </div>
+
+                <div class="card">
+                    <h2 style="font-size:1.05rem;">Mtaji na Riba / Capital &amp; Interest</h2>
+                    <div id="report-capital"></div>
+                </div>
+
+                <button type="button" class="btn-link" data-back-to-dashboard>Rudi / Back to dashboard</button>
+            </section>
         </main>
     </div>
 
@@ -543,5 +617,6 @@ $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
     <script src="<?= htmlspecialchars($asset('assets/js/logs.js')) ?>"></script>
     <script src="<?= htmlspecialchars($asset('assets/js/vaccinations.js')) ?>"></script>
     <script src="<?= htmlspecialchars($asset('assets/js/insights.js')) ?>"></script>
+    <script src="<?= htmlspecialchars($asset('assets/js/reports.js')) ?>"></script>
 </body>
 </html>
