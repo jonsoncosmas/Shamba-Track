@@ -26,6 +26,7 @@ class VaccinationController
         $completedDate = Request::input('completed_date', null);
         $completedDate = $completedDate !== null && $completedDate !== '' ? (string) $completedDate : null;
         $notes = trim((string) Request::input('notes', '')) ?: null;
+        $version = (int) Request::input('version', 1);
 
         if (!preg_match('/^[0-9a-fA-F-]{36}$/', $clientUuid)) Response::error('Kitambulisho batili.', 422);
         if (!preg_match('/^[0-9a-fA-F-]{36}$/', $batchClientUuid)) Response::error('Chagua kundi. / Batch reference required.', 422);
@@ -38,8 +39,19 @@ class VaccinationController
             'client_uuid' => $clientUuid, 'batch_client_uuid' => $batchClientUuid,
             'disease' => $disease, 'vaccine_name' => $vaccineName, 'age_days' => $ageDays,
             'due_date' => $dueDate, 'status' => $status, 'completed_date' => $completedDate, 'notes' => $notes,
+            'version' => $version,
         ]);
-        Response::json(['success' => true, 'record' => $result['record'], 'was_created' => $result['was_created']]);
+
+        if ($result['status'] === 'conflict') {
+            Response::json([
+                'success' => false,
+                'conflict' => true,
+                'message' => 'Rekodi hii ilibadilishwa mahali pengine kabla. / This record was already changed elsewhere.',
+                'server_record' => $result['record'],
+            ], 409);
+        }
+
+        Response::json(['success' => true, 'record' => $result['record'], 'was_created' => $result['status'] === 'created']);
     }
 
     public static function list(): void

@@ -64,7 +64,11 @@ const ShambaDB = (function () {
 
     async function getUnsynced(storeName) {
         const all = await getAll(storeName);
-        return all.filter((r) => r.synced === false);
+        // A record with an unresolved conflict or a permanent sync error
+        // must not be silently retried — it needs the farmer's input
+        // (conflict) or attention (repeated failure), not another blind
+        // resync attempt that would just fail or overwrite the same way.
+        return all.filter((r) => r.synced === false && !r.conflict && !r.sync_error);
     }
 
     function uuid() {

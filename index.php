@@ -137,6 +137,7 @@ $asset = fn(string $path) => $basePath . '/' . ltrim($path, '/');
                 </div>
 
                 <div id="vaccination-alert-banner" class="vaccination-alert hidden" role="button" tabindex="0"></div>
+                <div id="sync-status-banner" class="sync-status hidden"></div>
 
                 <button type="button" class="btn-primary" id="btn-open-daily-log" style="margin-top:0;">
                     <span class="btn-label">📋 Rekodi ya Leo / Daily Log</span>

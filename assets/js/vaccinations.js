@@ -67,6 +67,7 @@
                 status: 'pending',
                 completed_date: null,
                 notes: item.notes || null,
+                version: 1,
                 synced: false,
             });
         }
@@ -153,19 +154,48 @@
         }
 
         listEl.innerHTML = schedule.map((r) => {
+            if (r.conflict) return renderConflictRow(r);
+
             const status = classify(r);
             const pending = r.synced === false ? ' <span class="pending-badge" title="Bado kutumwa">●</span>' : '';
+            const syncError = r.sync_error ? ' <span class="sync-error-badge" title="Imeshindwa kutumwa mara nyingi">❌</span>' : '';
             const doneButton = status !== 'done'
                 ? `<button type="button" class="btn-tiny mark-done" data-uuid="${r.client_uuid}">✓ Imekamilika</button>`
                 : '';
             return `<li class="vaccination-row vaccination-row--${status}">
                 <div>
                     <strong>${r.vaccine_name}</strong> — ${r.disease}<br>
-                    <span class="subtext">Tarehe / Due: ${r.due_date} · <span class="status-tag status-tag--${status}">${STATUS_LABELS[status]}</span>${pending}</span>
+                    <span class="subtext">Tarehe / Due: ${r.due_date} · <span class="status-tag status-tag--${status}">${STATUS_LABELS[status]}</span>${pending}${syncError}</span>
                 </div>
                 ${doneButton}
             </li>`;
         }).join('');
+    }
+
+    // A conflict means this device's local change and the server's current
+    // state disagree — likely the same vaccination was marked done from
+    // two sessions/devices before either had synced. Show BOTH versions
+    // and let the farmer pick, rather than guessing which one is "right".
+    function renderConflictRow(r) {
+        const server = r.conflict.serverRecord || {};
+        return `<li class="vaccination-row vaccination-row--conflict">
+            <div class="conflict-box">
+                <p class="conflict-title">⚠️ Mgongano wa Taarifa / Conflicting update</p>
+                <p><strong>${r.vaccine_name}</strong> — ${r.disease}</p>
+                <div class="conflict-columns">
+                    <div>
+                        <p class="conflict-col-label">Kwenye Kifaa Hiki / On this device</p>
+                        <p>${STATUS_LABELS[r.status] || r.status}${r.completed_date ? ` (${r.completed_date})` : ''}</p>
+                        <button type="button" class="btn-tiny resolve-conflict" data-uuid="${r.client_uuid}" data-choice="mine">Weka Hii / Keep this</button>
+                    </div>
+                    <div>
+                        <p class="conflict-col-label">Kwenye Seva / On the server</p>
+                        <p>${STATUS_LABELS[server.status] || server.status || '—'}${server.completed_date ? ` (${server.completed_date})` : ''}</p>
+                        <button type="button" class="btn-tiny resolve-conflict" data-uuid="${r.client_uuid}" data-choice="server">Weka Hii / Keep this</button>
+                    </div>
+                </div>
+            </div>
+        </li>`;
     }
 
     // Delegated click: any "💉 Chanjo" button on the dashboard batch list,
@@ -184,7 +214,10 @@
         }
 
         const doneBtn = e.target.closest('.mark-done');
-        if (doneBtn) markDone(doneBtn.dataset.uuid);
+        if (doneBtn) { markDone(doneBtn.dataset.uuid); return; }
+
+        const resolveBtn = e.target.closest('.resolve-conflict');
+        if (resolveBtn) resolveConflict(resolveBtn.dataset.uuid, resolveBtn.dataset.choice);
     });
 
     document.addEventListener('keydown', (e) => {
@@ -209,6 +242,44 @@
         const batchUuid = record.batch_client_uuid;
         const schedule = (await ShambaDB.getAll('vaccinations'))
             .filter((r) => r.batch_client_uuid === batchUuid)
+            .sort((a, b) => a.due_date.localeCompare(b.due_date));
+        renderChecklist(schedule);
+
+        ShambaSync.syncPending();
+        renderVaccinationAlertBanner();
+    }
+
+    async function resolveConflict(clientUuid, choice) {
+        const all = await ShambaDB.getAll('vaccinations');
+        const record = all.find((r) => r.client_uuid === clientUuid);
+        if (!record || !record.conflict) return;
+
+        const server = record.conflict.serverRecord || {};
+
+        if (choice === 'mine') {
+            // Keep this device's status/notes, but adopt the server's
+            // current version as the new baseline so the next sync
+            // attempt's version check succeeds instead of conflicting
+            // against itself again.
+            record.version = server.version || record.version;
+            record.conflict = null;
+            record.synced = false;
+            record.attempts = 0;
+        } else {
+            // Adopt the server's version of events entirely.
+            record.status = server.status || record.status;
+            record.completed_date = server.completed_date || null;
+            record.notes = server.notes || record.notes;
+            record.version = server.version || record.version;
+            record.conflict = null;
+            record.synced = true; // already matches the server, nothing to push
+            record.attempts = 0;
+        }
+
+        await ShambaDB.put('vaccinations', record);
+
+        const schedule = (await ShambaDB.getAll('vaccinations'))
+            .filter((r) => r.batch_client_uuid === record.batch_client_uuid)
             .sort((a, b) => a.due_date.localeCompare(b.due_date));
         renderChecklist(schedule);
 
